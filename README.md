@@ -7,14 +7,18 @@ A simple web server implemented in Python.
 ### Prerequisites
 
 * Python 3.7
-* `virtualenv`
-    * `pip3 install virtualenv`
+* `pyenv`
 
 ### Setup
 
 * Create a new virtual environment in the project directory
-    * `virtualenv env`
+    * `pyenv virtualenv env`
 * Activate the virtual environment
-    * `source ./env/bin/activate`
+    * `pyenv activate env`
 * Verify that `python` points to the virtual environment
     * `which python`
+
+## Running
+
+* `python server.py` - runs the server, listening on port 8888
+* `python client.py` - runs the simple client code, which performs a GET request to localhost:8888
