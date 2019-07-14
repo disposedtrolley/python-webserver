@@ -1,9 +1,23 @@
 import socket
-import time
+import signal
 import os
 
 SERVER_ADDRESS = (HOST, PORT) = '', 8888
 REQUEST_QUEUE_SIZE = 5
+
+
+def grim_reaper(signum, frame):
+    while True:
+        try:
+            pid, status = os.waitpid(
+                -1,         # Wait for any child processes
+                os.WNOHANG  # Do not block and return EWOULDBLOCK error
+            )
+        except OSError:
+            return
+
+        if pid == 0:    # No more zombies
+            return
 
 
 def handle_request(client_connection):
@@ -21,7 +35,6 @@ HTTP/1.1 200 OK
 Hello, World!
 """
     client_connection.sendall(http_response)
-    time.sleep(60)
 
 
 def serve_forever():
@@ -32,11 +45,21 @@ def serve_forever():
     print("Serving HTTP on port {port} ...".format(port=PORT))
     print("Parent PID (PPID): {pid}\n".format(pid=os.getpid()))
 
-    clients = []
-    while True:
-        client_connection, client_address = listen_socket.accept()
+    signal.signal(signal.SIGCHLD, grim_reaper)
 
-        clients.append(client_connection)
+    while True:
+        """
+        try:
+            client_connection, client_address = listen_socket.accept()
+        except IOError as e:
+            code, msg = e.args
+            # restart 'accept' if it was interrupted
+            if code == errno.EINTR:
+                continue
+            else:
+                raise
+        """
+        client_connection, client_address = listen_socket.accept()
 
         # fork() returns twice; once in the parent process and once in the
         # child. We can check which process the code is running in by examining
@@ -52,7 +75,6 @@ def serve_forever():
             os._exit(0)     # child exits here
         else:
             client_connection.close()   # close parent copy
-            print(len(clients))
 
 
 if __name__ == "__main__":
