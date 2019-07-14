@@ -32,16 +32,27 @@ def serve_forever():
     print("Serving HTTP on port {port} ...".format(port=PORT))
     print("Parent PID (PPID): {pid}\n".format(pid=os.getpid()))
 
+    clients = []
     while True:
         client_connection, client_address = listen_socket.accept()
+
+        clients.append(client_connection)
+
+        # fork() returns twice; once in the parent process and once in the
+        # child. We can check which process the code is running in by examining
+        # the PID. Child processes are assigned PID 0, while the parent retains
+        # the PID assigned when the script is first run.
         pid = os.fork()
         if pid == 0:    # child
-            listen_socket.close()   # close child copy
+            # Close the child copy of listen_socket because the child doesn't
+            # care about accepting new connections
+            listen_socket.close()
             handle_request(client_connection)
             client_connection.close()
             os._exit(0)     # child exits here
         else:
             client_connection.close()   # close parent copy
+            print(len(clients))
 
 
 if __name__ == "__main__":
